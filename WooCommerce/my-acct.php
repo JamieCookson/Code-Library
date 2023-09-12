@@ -1,10 +1,5 @@
 <?php 
 /**
- * WooCommerce functions
- */
-
-
-/**
  * My Account
  */
 
@@ -85,3 +80,19 @@
 			
 			}
 			add_action( 'woocommerce_created_customer', 'wp_save_acct_fields' );
+
+	// Add button to order items again
+		function add_order_again_bttn( $actions, $order ) {
+			
+			if ( ! $order || ! $order->has_status( apply_filters( 'woocommerce_valid_order_statuses_for_order_again', array( 'completed' ) ) ) || ! is_user_logged_in() ) {
+				return $actions;
+			}
+
+			$actions['order-again'] = array(
+				'url'  => wp_nonce_url( add_query_arg( 'order_again', $order->get_id() ) , 'woocommerce-order_again' ),
+				'name' => __( 'Order Again', 'woocommerce' )
+			);
+			return $actions;
+
+		}
+		add_filter( 'woocommerce_my_account_my_orders_actions', 'add_order_again_bttn', 10, 2 );
