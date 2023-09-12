@@ -64,6 +64,18 @@
                 return $new_rates;
             }
             return $rates;
-            
+
         }
         add_filter( 'woocommerce_package_rates', 'hide_shipping_when_free_is_available', 10, 2 );
+
+    // Add SKU to basket
+        function display_sku_after_item_name ( $item_name, $cart_item, $cart_item_key ) {
+
+            $product = $cart_item['data']; // The WC_Product Object
+            if( is_cart() && $product->get_sku() ) {
+                $item_name .= '<span class="item-sku"> - '. $product->get_sku() . '</span>';
+            }
+            return $item_name;
+            
+        }
+        add_filter( 'woocommerce_cart_item_name', 'display_sku_after_item_name', 5, 3 );

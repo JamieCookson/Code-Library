@@ -12,19 +12,32 @@
 	// Allow duplicate SKUs
 		add_filter( 'wc_product_has_unique_sku', '__return_false' ); 
 
+	// Always show variation price
+		add_filter( 'woocommerce_show_variation_price', '__return_true' );
+			
 	// Change sale badge text
 		function wc_custom_replace_sale_text( $html ) {
 			return str_replace( __( 'Sale!', 'woocommerce' ), __( 'Sale', 'woocommerce' ), $html );
 		}
 		add_filter( 'woocommerce_sale_flash', 'wc_custom_replace_sale_text' );
 
-	// Change number of upsells output
-		function number_products_on_upsell( $args ) {
+	// Change number of upsells or related output
+		function number_related_products( $args ) {
 			$args['posts_per_page'] = 4; 
 			$args['columns']        = 4; 
 			return $args;
 		}
-		add_filter( 'woocommerce_upsell_display_args', 'number_products_on_upsell' );
+		add_filter( 'woocommerce_output_related_products_args', 'number_related_products', 20 ); // Related / You might also like
+		add_filter( 'woocommerce_upsell_display_args', 'number_related_products' ); // Upsell
+
+	// Change related products title
+		function change_related_product_title ( $translated ) {
+
+			$translated = str_replace( 'Related products', 'Related products and accessories', $translated );
+			return $translated;
+
+		}
+		add_filter( 'gettext', 'change_related_product_title' );
 
 	// Add the SKU to the item meta
 		function add_sku_to_meta( $item_id, $values, $cart_item_key ) {
@@ -59,3 +72,47 @@
 			return $supports;
 		}
 		add_filter( 'woocommerce_register_post_type_product', 'cinch_add_revision_support' );
+
+	// Add Plus/minus button on product page
+		// Add buttons
+			function bfi_display_quantity_plus() {
+				echo '<button type="button" class="add"><span>+</span></button>';
+			}
+			function bfi_display_quantity_minus() {
+				echo '<button type="button" class="remove"><span>-</span></button>';
+			}
+			add_action( 'woocommerce_after_quantity_input_field', 'bfi_display_quantity_plus' );
+			add_action( 'woocommerce_before_quantity_input_field', 'bfi_display_quantity_minus' );
+
+		// Trigger update quantity script
+			function bfi_add_cart_quantity_plus_minus() {
+				if ( ! is_product() && ! is_cart() ) return;
+				wc_enqueue_js( "
+
+					$(document).on( 'click', 'button.add, button.remove', function() {
+
+						var qty = $( this ).parent( '.quantity' ).find( '.qty' );
+						var val = parseFloat(qty.val());
+						var max = parseFloat(qty.attr( 'max' ));
+						var min = parseFloat(qty.attr( 'min' ));
+						var step = parseFloat(qty.attr( 'step' ));
+
+						if ( $( this ).is( '.add' ) ) {
+							if ( max && ( max <= val ) ) {
+							qty.val( max ).change();
+							} else {
+							qty.val( val + step ).change();
+							}
+						} else {
+							if ( min && ( min >= val ) ) {
+							qty.val( min ).change();
+							} else if ( val > 1 ) {
+							qty.val( val - step ).change();
+							}
+						}
+
+					});
+
+				" );
+			}
+			add_action( 'wp_footer', 'bfi_add_cart_quantity_plus_minus' );

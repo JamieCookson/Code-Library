@@ -3,6 +3,13 @@
  * My Account
  */
 
+	// Remove Downloads from My Accounts page
+		function remove_downloads( $items ) {
+			unset($items['downloads']);
+			return $items;
+		}
+		add_filter( 'woocommerce_account_menu_items', 'remove_downloads' );
+
 	// Update fields on registering via My acct page 
 		
 		// Add fields
