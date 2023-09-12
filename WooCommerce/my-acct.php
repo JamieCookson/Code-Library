@@ -3,6 +3,10 @@
  * My Account
  */
 
+	// Disable redirect on account creation
+	// https://www.businessbloomer.com/woocommerce-deny-automatic-login-upon-registration-my-account/
+		add_filter( 'woocommerce_registration_auth_new_customer', '__return_false' );
+		
 	// Remove Downloads from My Accounts page
 		function remove_downloads( $items ) {
 			unset($items['downloads']);
